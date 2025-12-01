@@ -1,9 +1,9 @@
 import os
 import pandas as pd
-import resparser, match
+from . import resparser, match
 import nltk
 from nltk.corpus import stopwords
-import indeed_web_scraping_using_bs4
+from . import indeed_web_scraping_using_bs4
 
 nltk.download('punkt')
 nltk.download('averaged_perceptron_tagger')
@@ -70,7 +70,3 @@ def find_sort_resume(f,link):
     result_cosine = result_cosine.sort_values('Skills Match', ascending=False).reset_index(drop=True).head(20)
     result_cosine = result_cosine[['Resume Title', 'Skills Match', 'link']]
     return result_cosine
-
-    
-abc = find_sort_job(r'instance\resume_files\CV2.pdf')
-print(abc)

@@ -64,7 +64,7 @@ def convert_docx_to_txt(docx_file):
     clean_text = re.sub(r'\n+', '\n', text)
     clean_text = clean_text.replace("\r", "\n").replace("\t", " ")  # Normalize text blob
     resume_lines = clean_text.splitlines()  # Split text blob into individual lines
-    resume_lines = [re.sub('\s+', ' ', line.strip()) for line in resume_lines if line.strip()]  # Remove empty strings and whitespaces
+    resume_lines = [re.sub(r'\s+', ' ', line.strip()) for line in resume_lines if line.strip()]  # Remove empty strings and whitespaces
     return resume_lines
 
 def convert_pdf_to_txt(pdf_file):
@@ -82,7 +82,7 @@ def convert_pdf_to_txt(pdf_file):
     resume_lines = full_string.splitlines(True)
 
     # Remove empty strings and whitespaces
-    resume_lines = [re.sub('\s+', ' ', line.strip()) for line in resume_lines if line.strip()]
+    resume_lines = [re.sub(r'\s+', ' ', line.strip()) for line in resume_lines if line.strip()]
     return resume_lines
 
 def find_segment_indices(string_to_search, resume_segments, resume_indices):
@@ -134,7 +134,7 @@ def read_file(file):
     docx_parser = "tika"
     file = os.path.join(file)
     if file.endswith('docx') or file.endswith('doc'):
-        resume_lines = convert_docx_to_txt(file,docx_parser)
+        resume_lines = convert_docx_to_txt(file)
     elif file.endswith('pdf'):
         resume_lines = convert_pdf_to_txt(file)
     else:
@@ -152,7 +152,3 @@ def read_file(file):
     return {
             "skills": skills,
     }
-
-data = read_file(r'instance\resume_files\CV.pdf')
-abc = ' '.join(word for word in data['skills'])
-print(abc)

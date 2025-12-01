@@ -52,7 +52,7 @@ def cleaningText(text):
     text = re.sub('RT|cc', ' ', text)  # remove RT and cc
     text = re.sub('#\S+', ' ', text)  # remove hashtags
     text = re.sub('@\S+', ' ', text)  # remove mentions
-    text = re.sub('\s+', ' ', text)  # remove extra whitespace
+    text = re.sub(r'\s+', ' ', text)  # remove extra whitespace
     text.lower()
     text = re.sub(r'xx+', r' ', text)
     text = re.sub(r'XX+', r' ', text)

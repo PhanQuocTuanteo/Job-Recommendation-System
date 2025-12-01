@@ -1,6 +1,6 @@
 import re
 # from resume_parser import resumeparse
-import extract_skill
+from . import extract_skill
 
 # import nltk
 # nltk.download('punkt')
@@ -29,7 +29,7 @@ def convert_docx_to_txt(docx_file):
     clean_text = re.sub(r'\n+', '\n', text)
     clean_text = clean_text.replace("\r", "\n").replace("\t", " ")  # Normalize text blob
     resume_lines = clean_text.splitlines()  # Split text blob into individual lines
-    resume_lines = [re.sub('\s+', ' ', line.strip()) for line in resume_lines if line.strip()]  # Remove empty strings and whitespaces
+    resume_lines = [re.sub(r'\s+', ' ', line.strip()) for line in resume_lines if line.strip()]  # Remove empty strings and whitespaces
     return resume_lines
 
 def convert_pdf_to_txt(pdf_file):
@@ -47,5 +47,5 @@ def convert_pdf_to_txt(pdf_file):
     resume_lines = full_string.splitlines(True)
 
     # Remove empty strings and whitespaces
-    resume_lines = [re.sub('\s+', ' ', line.strip()) for line in resume_lines if line.strip()]
+    resume_lines = [re.sub(r'\s+', ' ', line.strip()) for line in resume_lines if line.strip()]
     return resume_lines
