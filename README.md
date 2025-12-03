@@ -32,7 +32,7 @@ An intelligent job recommendation system that matches job seekers with opportuni
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/jainiljakasaniya/resume-job-recommendation.git](https://github.com/PhanQuocTuanteo/Job-Recommendation-System.git
+   git clone https://github.com/PhanQuocTuanteo/Job-Recommendation-System.git
    cd resume-job-recommendation
    ```
 
