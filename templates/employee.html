@@ -19,7 +19,6 @@
             <ul class="navbar">
                 <li><a href="{{url_for('home')}}">Home</a></li>
                 <li><a href="{{url_for('employee')}}">Employee</a></li>
-                <li><a href="{{url_for('employeer')}}">Employeer</a></li>
             </ul>
         </nav>
         &nbsp; &nbsp;
@@ -39,37 +38,64 @@
             </label>
             <input type="submit" id="submit" hidden>
         </form>
+        <!-- Job Recommendations -->
+        {% if row_data %}
         <div id="result" class="job_recommendation">
-            <table>
-                <tr>
-                    {% for col in column_names %}
-                    <th>{{col}}</th>
+            <h2 style="margin-top: 30px; margin-bottom: 20px;">📋 Recommended Jobs (Top 20)</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            {% for col in column_names %}
+                            <th>{{col}}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for row in row_data %}
+                    <tr>
+                        {% for col, row_ in zip(column_names, row) %}
+                        {% if col == link_column %}
+                        <td>
+                            <a href="{{row_}}" target="_blank" class="job-link" data-job-link="{{row_}}" data-job-title="{{row[0] if row else ''}}">
+                                <button type="button" class="link_button">
+                                    Apply
+                                </button>
+                            </a>
+                        </td>
+                        {% else %}
+                        <td>{{row_}}</td>
+                        {% endif %}
+                        {% endfor %}
+                    </tr>
                     {% endfor %}
-                </tr>
-                {% for row in row_data %}
-                <tr>
-                    {% for col, row_ in zip(column_names, row) %}
-                    {% if col == link_column %}
-                    <td>
-                        <a href="{{row_}}">
-                            <button type="submit" value={{ row_ }} name="link" form="link_form" class="link_button">
-                                Apply
-                            </button>
-                        </a>
-                    </td>
-                    {% else %}
-                    <td>{{row_}}</td>
-                    {% endif %}
-                    {% endfor %}
-                </tr>
-                {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
 
-            </table>
+        <!-- Course Recommendations - Load via AJAX -->
+        <div id="course_result" class="course_recommendation" style="margin-top: 50px; display: none;">
+            <h2 style="margin-top: 30px; margin-bottom: 20px;">
+                📚 Recommended Courses (Top 20)
+                <span id="loading_courses" style="font-size: 14px; color: #666;">⏳ Loading courses...</span>
+            </h2>
+            <div id="course_table_container"></div>
+        </div>
+
+        <!-- Career Path Recommendations - Load via AJAX -->
+        <div id="career_path_result" class="career_path_recommendation" style="margin-top: 50px; display: none;">
+            <h2 style="margin-top: 30px; margin-bottom: 20px;">
+                🎯 Your Career Path
+                <span id="loading_career_path" style="font-size: 14px; color: #666;">⏳ Loading career path...</span>
+            </h2>
+            <div id="career_path_container"></div>
         </div>
     </center>
     <footer>
         <div class="copyright">
-            <small>Copyright &copy; 2022 - Resume Parser. All Rights Reserved</small>
+            <!-- <small>Copyright &copy; 2022 - Resume Parser. All Rights Reserved</small> -->
         </div>
     </footer>
     <script src="" async defer></script>
@@ -78,8 +104,174 @@
             var element = document.body;
             element.classList.toggle("dark-mode");
         }
+        
+        // Track job clicks for collaborative filtering
+        document.addEventListener('DOMContentLoaded', function() {
+            const resumeFilename = "{{ resume_filename }}";
+            if (!resumeFilename) return;
+            
+            // Attach click tracking to all job links
+            const jobLinks = document.querySelectorAll('a.job-link');
+            jobLinks.forEach(function(link) {
+                link.addEventListener('click', function(e) {
+                    const jobLink = this.getAttribute('data-job-link');
+                    const jobTitle = this.getAttribute('data-job-title') || '';
+                    
+                    // Send tracking request (async, không block)
+                    const formData = new FormData();
+                    formData.append('resume_filename', resumeFilename);
+                    formData.append('job_link', jobLink);
+                    formData.append('job_title', jobTitle);
+                    
+                    fetch('/track_job_click', {
+                        method: 'POST',
+                        body: formData
+                    }).catch(error => {
+                        // Silent fail - không ảnh hưởng UX
+                        console.log('Tracking failed:', error);
+                    });
+                });
+            });
+        });
     </script>
     <script src="{{ url_for('static',filename='java/button.js') }}"></script>
+    <script>
+        // Load courses via AJAX sau khi jobs đã hiển thị
+        {% if resume_filename %}
+        (function() {
+            // Show course section
+            document.getElementById('course_result').style.display = 'block';
+            
+            // Load courses via AJAX
+            const formData = new FormData();
+            formData.append('resume_filename', '{{ resume_filename }}');
+            
+            fetch('/get_courses', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('loading_courses').style.display = 'none';
+                
+                if (data.success && data.row_data && data.row_data.length > 0) {
+                    // Build table với container có scroll và sticky header
+                    let tableHTML = '<div class="table-container"><table><thead><tr>';
+                    data.column_names.forEach(col => {
+                        tableHTML += '<th>' + col + '</th>';
+                    });
+                    tableHTML += '</tr></thead><tbody>';
+                    
+                    data.row_data.forEach(row => {
+                        tableHTML += '<tr>';
+                        data.column_names.forEach((col, idx) => {
+                            const value = row[idx];
+                            if (col === 'Link') {
+                                // Hiển thị button "Apply" giống job recommendations
+                                if (value && value !== 'N/A' && value !== 'nan' && String(value).trim() !== '') {
+                                    tableHTML += '<td><a href="' + value + '" target="_blank"><button type="button" class="link_button">Apply</button></a></td>';
+                                } else {
+                                    tableHTML += '<td>N/A</td>';
+                                }
+                            } else if (col === 'Recommendation Type') {
+                                const color = value === 'Missing Skills' ? '#ff6b6b' : '#4ecdc4';
+                                const emoji = value === 'Missing Skills' ? '🔴' : '🟢';
+                                tableHTML += '<td><span style="color: ' + color + '; font-weight: bold;">' + emoji + ' ' + value + '</span></td>';
+                            } else if (col === 'Match Score') {
+                                const numValue = parseFloat(value) || 0;
+                                let color = '#ff6b6b';
+                                if (numValue >= 50) color = '#51cf66';
+                                else if (numValue >= 30) color = '#ffd43b';
+                                tableHTML += '<td><span style="font-weight: bold; color: ' + color + ';">' + value + '%</span></td>';
+                            } else {
+                                tableHTML += '<td>' + (value || 'N/A') + '</td>';
+                            }
+                        });
+                        tableHTML += '</tr>';
+                    });
+                    tableHTML += '</tbody></table></div>';
+                    
+                    document.getElementById('course_table_container').innerHTML = tableHTML;
+                } else {
+                    document.getElementById('course_table_container').innerHTML = '<p style="color: #666;">No course recommendations available at this time.</p>';
+                }
+            })
+            .catch(error => {
+                console.error('Error loading courses:', error);
+                document.getElementById('loading_courses').textContent = '❌ Error loading courses';
+                document.getElementById('course_table_container').innerHTML = '<p style="color: #ff6b6b;">Error loading courses. Please try again later.</p>';
+            });
+        })();
+        {% endif %}
+    </script>
+    <script>
+        // Load career path via AJAX sau khi courses đã hiển thị
+        {% if resume_filename %}
+        (function() {
+            // Show career path section
+            document.getElementById('career_path_result').style.display = 'block';
+            
+            // Load career path via AJAX
+            const formData = new FormData();
+            formData.append('resume_filename', '{{ resume_filename }}');
+            
+            fetch('/get_career_path', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('loading_career_path').style.display = 'none';
+                
+                if (data.success && data.career_path && data.career_path.length > 0) {
+                    let careerPathHTML = '';
+                    
+                    // Industry và matched job title
+                    if (data.industry) {
+                        careerPathHTML += `<p style="color: #666; margin-bottom: 10px;"><strong>Industry:</strong> ${data.industry}</p>`;
+                    }
+                    if (data.matched_job_title) {
+                        careerPathHTML += `<p style="color: #666; margin-bottom: 20px;"><strong>Matched Role:</strong> ${data.matched_job_title}</p>`;
+                    }
+                    
+                    // Career path visualization
+                    careerPathHTML += '<div style="display: flex; flex-wrap: wrap; gap: 15px; align-items: center; margin-top: 20px;">';
+                    
+                    data.career_path.forEach((role, index) => {
+                        const isLast = index === data.career_path.length - 1;
+                        careerPathHTML += `
+                            <div style="
+                                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                color: white;
+                                padding: 12px 20px;
+                                border-radius: 8px;
+                                font-weight: bold;
+                                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                                min-width: 150px;
+                                text-align: center;
+                            ">${role}</div>
+                        `;
+                        
+                        if (!isLast) {
+                            careerPathHTML += '<span style="font-size: 24px; color: #667eea;">→</span>';
+                        }
+                    });
+                    
+                    careerPathHTML += '</div>';
+                    
+                    document.getElementById('career_path_container').innerHTML = careerPathHTML;
+                } else {
+                    document.getElementById('career_path_container').innerHTML = '<p style="color: #666;">No career path recommendations available at this time.</p>';
+                }
+            })
+            .catch(error => {
+                console.error('Error loading career path:', error);
+                document.getElementById('loading_career_path').textContent = '❌ Error loading career path';
+                document.getElementById('career_path_container').innerHTML = '<p style="color: #ff6b6b;">Error loading career path. Please try again later.</p>';
+            });
+        })();
+        {% endif %}
+    </script>
 </body>
 
 </html>

@@ -113,7 +113,7 @@ label.chosen {
 }
 
 table {
-  margin-top: 40px;
+  margin-top: 0;
   z-index: 2;
   align-items: center;
   font-family: arial, sans-serif;
@@ -122,7 +122,54 @@ table {
   box-shadow: 0 2px 15px rgba(64, 64, 64, 0.7);
   border-radius: 12px 12px 0 0;
   overflow: hidden;
+  width: 100%;
+}
+
+/* Table container với scroll */
+.table-container {
+  margin-top: 40px;
   width: 80%;
+  max-height: 400px; /* Khoảng 5-6 dòng (mỗi dòng ~60-70px) */
+  overflow-y: auto;
+  overflow-x: auto;
+  border-radius: 12px;
+  box-shadow: 0 2px 15px rgba(64, 64, 64, 0.7);
+  position: relative;
+}
+
+/* Sticky header - cố định header khi scroll */
+.table-container table thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.table-container table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: #2d4059 !important;
+  color: #fafafa !important;
+}
+
+/* Custom scrollbar styling */
+.table-container::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.table-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+  background: #2d4059;
+  border-radius: 10px;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+  background: #435f84;
 }
 
 td,

@@ -48,10 +48,10 @@ def cleaningText(text):
     text = re.sub(' nan ', ' ', text)
     text = re.sub(r'\\x[0-9a-z]{2}', r' ', text)
     text = re.sub(r'[0-9]{2,}', r' ', text)
-    text = re.sub('http\S+\s*', ' ', text)  # remove URLs
+    text = re.sub(r'http\S+\s*', ' ', text)  # remove URLs
     text = re.sub('RT|cc', ' ', text)  # remove RT and cc
-    text = re.sub('#\S+', ' ', text)  # remove hashtags
-    text = re.sub('@\S+', ' ', text)  # remove mentions
+    text = re.sub(r'#\S+', ' ', text)  # remove hashtags
+    text = re.sub(r'@\S+', ' ', text)  # remove mentions
     text = re.sub(r'\s+', ' ', text)  # remove extra whitespace
     text.lower()
     text = re.sub(r'xx+', r' ', text)
