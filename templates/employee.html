@@ -223,7 +223,7 @@
             .then(data => {
                 document.getElementById('loading_career_path').style.display = 'none';
                 
-                if (data.success && data.career_path && data.career_path.length > 0) {
+                if (data.success && (data.career_path || data.career_path_with_links)) {
                     let careerPathHTML = '';
                     
                     // Industry và matched job title
@@ -234,22 +234,35 @@
                         careerPathHTML += `<p style="color: #666; margin-bottom: 20px;"><strong>Matched Role:</strong> ${data.matched_job_title}</p>`;
                     }
                     
-                    // Career path visualization
+                    // Career path visualization với links
                     careerPathHTML += '<div style="display: flex; flex-wrap: wrap; gap: 15px; align-items: center; margin-top: 20px;">';
                     
-                    data.career_path.forEach((role, index) => {
-                        const isLast = index === data.career_path.length - 1;
+                    // Sử dụng career_path_with_links nếu có, nếu không dùng career_path cũ
+                    const pathItems = data.career_path_with_links || data.career_path.map(role => ({title: role, link: 'https://www.google.com/search?q=' + encodeURIComponent(role)}));
+                    
+                    pathItems.forEach((item, index) => {
+                        const isLast = index === pathItems.length - 1;
+                        const roleTitle = item.title || item;
+                        const roleLink = item.link || ('https://www.google.com/search?q=' + encodeURIComponent(roleTitle));
+                        
                         careerPathHTML += `
-                            <div style="
-                                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                                color: white;
-                                padding: 12px 20px;
-                                border-radius: 8px;
-                                font-weight: bold;
-                                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-                                min-width: 150px;
-                                text-align: center;
-                            ">${role}</div>
+                            <a href="${roleLink}" target="_blank" style="text-decoration: none;">
+                                <div style="
+                                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                    color: white;
+                                    padding: 12px 20px;
+                                    border-radius: 8px;
+                                    font-weight: bold;
+                                    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                                    min-width: 150px;
+                                    text-align: center;
+                                    transition: transform 0.2s, box-shadow 0.2s;
+                                    cursor: pointer;
+                                " 
+                                onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 6px 12px rgba(0,0,0,0.15)';"
+                                onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 6px rgba(0,0,0,0.1)';"
+                                >${roleTitle}</div>
+                            </a>
                         `;
                         
                         if (!isLast) {

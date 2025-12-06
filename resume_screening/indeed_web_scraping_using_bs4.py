@@ -50,7 +50,7 @@ def parse_job(url):
 
 def save_csv(results):
       keys = results[0].keys()
-      with open('indeed_data.csv', 'a', newline='', encoding="utf-8") as f:
+      with open('Datasets/indeed_data.csv', 'a', newline='', encoding="utf-8") as f:
         dict_writer = csv.DictWriter(f, keys)
         dict_writer.writeheader()
         dict_writer.writerows(results)

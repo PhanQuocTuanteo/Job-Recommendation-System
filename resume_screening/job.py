@@ -7,6 +7,7 @@ from . import indeed_web_scraping_using_bs4
 from . import collaborative_filter, user_interactions
 from . import career_path_advisor
 from . import experience_analyzer
+from urllib.parse import quote_plus
 
 nltk.download('punkt')
 nltk.download('averaged_perceptron_tagger')
@@ -18,11 +19,26 @@ nltk.download('brown')
 
 stopw  = set(stopwords.words('english'))
 
+def create_indeed_search_link(job_title):
+    """
+    Tạo link tìm kiếm Indeed từ Job Title
+    Args:
+        job_title: Tên công việc
+    Returns:
+        URL tìm kiếm trên Indeed
+    """
+    if not job_title or pd.isna(job_title):
+        return 'https://in.indeed.com/jobs'
+    
+    # URL encode job title (thay khoảng trắng bằng +)
+    encoded_title = quote_plus(str(job_title).strip())
+    return f'https://in.indeed.com/jobs?q={encoded_title}'
+
 def find_sort_job(f):
     """
     Content-based job recommendation (ORIGINAL FUNCTION - KHÔNG THAY ĐỔI)
     """
-    job = pd.read_csv(r'indeed_data.csv')
+    job = pd.read_csv(r'Datasets/indeed_data.csv')
     job['test'] = job['description'].apply(lambda x: ' '.join([word for word in str(x).split() if word not in (stopw)]))
     df = job.drop_duplicates(subset='test').reset_index(drop=True)
     df['clean'] = df['test'].apply(match.preprocessing)
@@ -39,6 +55,11 @@ def find_sort_job(f):
     result_cosine = result_cosine.join(matchPercentage)
     result_cosine = result_cosine[['title','company','Skills Match','link']]
     result_cosine.columns = ['Job Title','Company','Skills Match','Link']
+    # Lưu link gốc để dùng cho collaborative filtering
+    result_cosine['Original Link'] = result_cosine['Link'].copy()
+    # Tạo link tìm kiếm Indeed từ Job Title thay vì dùng link gốc (có thể đã hết hạn)
+    result_cosine['Link'] = result_cosine['Job Title'].apply(create_indeed_search_link)
+    
     result_cosine = result_cosine.sort_values('Skills Match', ascending=False).reset_index(drop=True).head(20)
     return result_cosine
 
@@ -83,9 +104,10 @@ def find_sort_job_hybrid(resume_file, use_collaborative=True, collaborative_weig
             # Get user ID
             user_id = tracker.get_user_id_from_file(resume_file)
             
-            # Track job views (implicit feedback)
+            # Track job views (implicit feedback) - sử dụng Original Link cho tracking
             for _, row in content_based.head(10).iterrows():  # Track top 10
-                tracker.track_job_view(resume_file, row['Link'], row['Job Title'])
+                original_link = row.get('Original Link', row['Link'])
+                tracker.track_job_view(resume_file, original_link, row['Job Title'])
             
             # Get collaborative recommendations
             collab_job_links = collab_filter.recommend_jobs_collaborative(user_id, top_n=20)
@@ -95,7 +117,8 @@ def find_sort_job_hybrid(resume_file, use_collaborative=True, collaborative_weig
                 content_based['Collaborative Score'] = 0.0
                 
                 for idx, row in content_based.iterrows():
-                    job_link = row['Link']
+                    # Sử dụng Original Link để match với collaborative recommendations
+                    job_link = row.get('Original Link', row['Link'])
                     if job_link in collab_job_links:
                         # Get collaborative score
                         collab_score = collab_filter.get_collaborative_score(user_id, job_link)
@@ -122,6 +145,14 @@ def find_sort_job_hybrid(resume_file, use_collaborative=True, collaborative_weig
             # Fallback to content-based nếu có lỗi (đảm bảo hệ thống vẫn hoạt động)
             print(f"Collaborative filtering failed, using content-based only: {e}")
             pass
+    
+    # Tạo link tìm kiếm Indeed từ Job Title thay vì dùng link gốc (có thể đã hết hạn)
+    # Làm sau cùng để không ảnh hưởng đến collaborative filtering
+    content_based['Link'] = content_based['Job Title'].apply(create_indeed_search_link)
+    
+    # Xóa cột Original Link trước khi trả về (không cần hiển thị)
+    if 'Original Link' in content_based.columns:
+        content_based = content_based.drop(columns=['Original Link'])
     
     return content_based.head(20)
 

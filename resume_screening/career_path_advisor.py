@@ -6,11 +6,28 @@ import os
 import pandas as pd
 from . import resparser
 from difflib import SequenceMatcher
+from urllib.parse import quote_plus
 
 class CareerPathAdvisor:
     """Career Path Advisor để đề xuất career progression"""
     
-    def __init__(self, career_path_file='course dataset/careerPath.csv'):
+    @staticmethod
+    def create_google_search_link(job_title):
+        """
+        Tạo link tìm kiếm Google từ Job Title
+        Args:
+            job_title: Tên công việc
+        Returns:
+            URL tìm kiếm trên Google
+        """
+        if not job_title or pd.isna(job_title):
+            return 'https://www.google.com/search?q=jobs'
+        
+        # URL encode job title
+        encoded_title = quote_plus(str(job_title).strip())
+        return f'https://www.google.com/search?q={encoded_title}'
+    
+    def __init__(self, career_path_file='Datasets/careerPath.csv'):
         """
         Initialize career path advisor
         
@@ -205,11 +222,20 @@ class CareerPathAdvisor:
                     self.career_paths_df['Job Title'] == matched_job_title
                 ].iloc[0]
                 
+                # Tạo career path với links cho mỗi vị trí
+                career_path_with_links = []
+                for role in matched_row['career_path_list']:
+                    career_path_with_links.append({
+                        'title': role,
+                        'link': self.create_google_search_link(role)
+                    })
+                
                 return {
                     'success': True,
                     'matched_job_title': matched_job_title,
                     'industry': matched_row['Industry'],
-                    'career_path': matched_row['career_path_list'],
+                    'career_path': matched_row['career_path_list'],  # Giữ nguyên để backward compatibility
+                    'career_path_with_links': career_path_with_links,  # Mới: có links
                     'skills': matched_row['skills_list']
                 }
             else:

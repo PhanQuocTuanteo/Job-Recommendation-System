@@ -32,7 +32,7 @@ An intelligent job recommendation system that matches job seekers with opportuni
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/jainiljakasaniya/resume-job-recommendation.git
+   git clone https://github.com/PhanQuocTuanteo/Job-Recommendation-System.git
    cd resume-job-recommendation
    ```
 
@@ -114,7 +114,13 @@ resume-job-recommendation/
 │   ├── collaborative_filter.py     # Collaborative filtering
 │   ├── user_interactions.py        # User interaction tracking
 │   └── career_path_advisor.py      # Career path suggestions
-└── course dataset/                  # Course datasets (CSV files)
+└── Datasets/                        # All datasets (CSV files)
+    ├── indeed_data.csv              # Job postings from Indeed
+    ├── Coursera.csv                 # Coursera courses
+    ├── Udemy.csv                    # Udemy courses
+    ├── edx.csv                      # edX courses
+    ├── skillshare.csv               # Skillshare courses
+    └── careerPath.csv               # Career path data
 ```
 
 ## Documentation

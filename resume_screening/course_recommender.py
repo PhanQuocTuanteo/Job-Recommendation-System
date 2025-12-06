@@ -17,7 +17,7 @@ class CourseRecommender:
     Đề xuất khóa học dựa trên CV và job recommendations
     """
     
-    def __init__(self, course_data_dir='course dataset', use_cache=True):
+    def __init__(self, course_data_dir='Datasets', use_cache=True):
         """
         Initialize course recommender
         
@@ -45,7 +45,7 @@ class CourseRecommender:
     def _load_jobs_data(self):
         """Load job data để extract skills từ job descriptions"""
         try:
-            self.jobs_df = pd.read_csv('indeed_data.csv')
+            self.jobs_df = pd.read_csv('Datasets/indeed_data.csv')
         except:
             self.jobs_df = pd.DataFrame()
     
